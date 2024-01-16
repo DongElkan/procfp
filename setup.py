@@ -6,13 +6,14 @@ from Cython.Build import cythonize
 PACKAGE_DIR = "procfp"
 
 setup(
-    name="proclc",
+    name="procfp",
     version="0.0.1",
-    description="proclc: automatic processing liquid chromatograms.",
+    description="procfp: automatic processing liquid chromatograms "
+                "for fingerprinting.",
     author="Dong Nai-ping",
     author_email="nai-ping.dong@polyu.edu.hk",
     packages=[
-        "proclc",
+        "procfp",
     ],
     ext_modules=cythonize([
         os.path.join(PACKAGE_DIR, "core/*.pyx")
