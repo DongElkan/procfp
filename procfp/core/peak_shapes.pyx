@@ -35,14 +35,6 @@ cdef double approx_log_erfc(double x):
 
 
 @cython.cdivision(True)
-cdef double exp_erfc_ratio(double x, double z):
-    if z <= 0.:
-        return exp(- x * x) / erfc(z)
-    else:
-        return exp(- x * x - approx_log_erfc(z))
-
-
-@cython.cdivision(True)
 cdef double exp_erfc_mul(double x, double z):
     if z <= 0.:
         return exp(-x * x) * erfc(z)
@@ -53,24 +45,35 @@ cdef double exp_erfc_mul(double x, double z):
 @cython.wraparound(False)
 @cython.cdivision(True)
 cdef void emg(double[::1] x, double[::1] param, double[::1] y):
+    """
+    Estimates parameters of EMG.
+
+    References:
+        Kalambet Y, et al. Reconstruction of chromatographic peaks
+        using the exponentially modified Gaussian function.
+        J Chemometrics. 2011, 25, 352–356.
+
+    """
+
     cdef:
         Py_ssize_t n = x.shape[0]
         Py_ssize_t i
-        double a = param[0]
+        double h = param[0]
         double mu = param[1]
         double s = param[2]
-        double lb = param[3]
-        double lk = lb / 2.
-        double c1 = lb * mu + lb * lb * s * s / 2.
-        double c2 = mu + lb * s * s
-        double sb = sqrt(2.) * s
+        double t = param[3]
+        double gc = h * s / t * sqrt(M_PI / 2.)
+        double ec = mu / t + s * s / (2. * t * t)
+        double st = s / t
+        double zc = (mu / s + st) / sqrt(2.)
+        double c2 = sqrt(2.) * s
         double m, z, g
 
     for i in range(n):
-        m = c1 - lb * x[i]
-        z = (c2 - x[i]) / sb
+        m = (x[i] - mu) / s
+        z = zc - x[i] / c2
         if z < 0.:
-            y[i] = lk * exp(m) * erfc(z) * a
+            y[i] = gc * exp(ec - x[i] / t) * erfc(z)
         else:
             g = approx_log_erfc(z) + m
             y[i] = lk * exp(g) * a
